@@ -1,2 +1,10 @@
 node_modules/
 .env
+.env.*
+!.env.example
+dist/
+.vite/
+backend/pgdata/
+*.log
+.DS_Store
+Thumbs.db

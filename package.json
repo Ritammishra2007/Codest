@@ -1,0 +1,24 @@
+{
+  "name": "codest-workspace",
+  "private": true,
+  "scripts": {
+    "db:start": "/Applications/Postgres.app/Contents/Versions/18/bin/pg_ctl -D backend/pgdata -o \"-p 5433 -k /tmp\" -l backend/pgdata/logfile start",
+    "db:stop": "/Applications/Postgres.app/Contents/Versions/18/bin/pg_ctl -D backend/pgdata stop",
+    "db:status": "/Applications/Postgres.app/Contents/Versions/18/bin/pg_isready -h 127.0.0.1 -p 5433",
+    "db:reset": "cd backend && node prisma/reset.js && node prisma/seed.js",
+    "db:seed": "cd backend && node prisma/seed.js",
+    "studio": "cd backend && npx prisma studio",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "test": "cd backend && node test/verify_codest.js"
+  },
+  "version": "1.0.0",
+  "description": "> A 1v1 competitive programming platform for Python developers.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "keywords": [],
+  "type": "commonjs"
+}
