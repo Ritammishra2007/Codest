@@ -1,0 +1,113 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -----------------------------------------------------------------------------
+// 1. USERS TABLE
+// -----------------------------------------------------------------------------
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique @db.VarChar(30)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  roomsCreated Room[]       @relation("RoomPlayer1")
+  roomsJoined  Room[]       @relation("RoomPlayer2")
+  roomsWon     Room[]       @relation("RoomWinner")
+  submissions  Submission[]
+
+  @@map("users")
+}
+
+// -----------------------------------------------------------------------------
+// 2. PROBLEMS TABLE
+// -----------------------------------------------------------------------------
+model Problem {
+  id              Int      @id @default(autoincrement())
+  title           String   @db.VarChar(150)
+  description     String   @db.Text
+  inputFormat     String   @map("input_format") @db.Text
+  outputFormat    String   @map("output_format") @db.Text
+  constraintsText String   @map("constraints_text") @db.Text
+  difficulty      String   @db.VarChar(10)
+  timeLimitMs     Int      @map("time_limit_ms")
+
+  // Relations
+  testCases TestCase[]
+  rooms     Room[]
+
+  @@map("problems")
+}
+
+// -----------------------------------------------------------------------------
+// 3. TEST_CASES TABLE
+// -----------------------------------------------------------------------------
+model TestCase {
+  id             Int     @id @default(autoincrement())
+  problemId      Int     @map("problem_id")
+  input          String  @db.Text
+  expectedOutput String  @map("expected_output") @db.Text
+  isSample       Boolean @map("is_sample")
+  position       Int
+
+  // Relations
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, position])
+  @@map("test_cases")
+}
+
+// -----------------------------------------------------------------------------
+// 4. ROOMS TABLE
+// -----------------------------------------------------------------------------
+model Room {
+  id                     Int       @id @default(autoincrement())
+  code                   String    @unique @db.VarChar(6)
+  problemId              Int       @map("problem_id")
+  player1Id              Int       @map("player1_id")
+  player2Id              Int?      @map("player2_id")
+  status                 String    @default("WAITING") @db.VarChar(10)
+  winnerId               Int?      @map("winner_id")
+  startedAt              DateTime? @map("started_at") @db.Timestamptz
+  endedAt                DateTime? @map("ended_at") @db.Timestamptz
+  nextSubmissionSequence Int       @default(1) @map("next_submission_sequence")
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  problem     Problem      @relation(fields: [problemId], references: [id])
+  player1     User         @relation("RoomPlayer1", fields: [player1Id], references: [id])
+  player2     User?        @relation("RoomPlayer2", fields: [player2Id], references: [id])
+  winner      User?        @relation("RoomWinner", fields: [winnerId], references: [id])
+  submissions Submission[]
+
+  @@map("rooms")
+}
+
+// -----------------------------------------------------------------------------
+// 5. SUBMISSIONS TABLE
+// -----------------------------------------------------------------------------
+model Submission {
+  id             Int       @id @default(autoincrement())
+  roomId         Int       @map("room_id")
+  userId         Int       @map("user_id")
+  sequenceNumber Int       @map("sequence_number")
+  sourceCode     String    @map("source_code") @db.Text
+  status         String    @default("PENDING") @db.VarChar(10)
+  verdict        String?   @db.VarChar(20)
+  submittedAt    DateTime  @default(now()) @map("submitted_at") @db.Timestamptz
+  judgedAt       DateTime? @map("judged_at") @db.Timestamptz
+
+  // Relations
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([roomId, sequenceNumber])
+  @@map("submissions")
+}
