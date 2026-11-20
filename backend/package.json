@@ -10,7 +10,6 @@
     "db:seed": "node prisma/seed.js",
     "db:reset": "node prisma/reset.js && node prisma/seed.js",
     "studio": "prisma studio",
-    "doctor": "node scripts/doctor.js",
     "test": "node test/verify_codest.js",
     "test:runner": "node --test test/pythonRunner.test.js",
     "generate": "prisma generate",

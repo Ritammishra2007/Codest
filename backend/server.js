@@ -50,7 +50,7 @@ const HOST = process.env.HOST || '127.0.0.1';
 
 async function start() {
   if (!process.env.JWT_SECRET || /replace_with|your_.*secret/i.test(process.env.JWT_SECRET)) {
-    throw new Error('Set a unique JWT_SECRET in backend/.env (npm run setup creates it for fresh clones).');
+    throw new Error('Set a unique JWT_SECRET in backend/.env. See the README for the command to generate one.');
   }
   getPythonCommand();
   await prisma.$connect();
