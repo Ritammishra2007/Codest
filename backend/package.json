@@ -5,11 +5,18 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "db:setup": "prisma generate && prisma db push && node prisma/seed.js",
+    "db:seed": "node prisma/seed.js",
+    "db:reset": "node prisma/reset.js && node prisma/seed.js",
+    "studio": "prisma studio",
+    "doctor": "node scripts/doctor.js",
+    "test": "node test/verify_codest.js",
+    "test:runner": "node --test test/pythonRunner.test.js"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -18,5 +25,8 @@
   "devDependencies": {
     "nodemon": "^3.1.9",
     "prisma": "^6.4.1"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

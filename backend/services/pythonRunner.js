@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import { getPythonCommand } from '../config/python.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -33,10 +34,13 @@ function executeSingleTest(pythonFilePath, inputData, timeLimitMs) {
     let isOutputExceeded = false;
 
     // Spawn child Python process
-    const child = spawn('python3', [pythonFilePath], {
+    const python = getPythonCommand();
+    const child = spawn(python.command, [...python.args, pythonFilePath], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         PATH: process.env.PATH,
+        ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
+        PYTHONIOENCODING: 'utf-8',
         PYTHONUNBUFFERED: '1',
       },
     });
@@ -47,6 +51,9 @@ function executeSingleTest(pythonFilePath, inputData, timeLimitMs) {
       isTerminated = true;
       child.kill('SIGKILL');
     }, timeLimitMs);
+
+    // A program may exit before consuming stdin; do not crash the server on EPIPE.
+    child.stdin.on('error', () => {});
 
     // Feed input data through stdin
     try {

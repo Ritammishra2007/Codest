@@ -1,10 +1,11 @@
-import 'dotenv/config';
+import './config/env.js';
+import { getPythonCommand } from './config/python.js';
 import express from 'express';
 import cors from 'cors';
 import prisma from './config/prisma.js';
 import authRoutes from './routes/authRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
-import { startJudgingService } from './services/judgingService.js';
+import { startJudgingService, stopJudgingService } from './services/judgingService.js';
 
 const app = express();
 
@@ -44,12 +45,35 @@ app.get('/', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = Number(process.env.PORT || 5001);
+const HOST = process.env.HOST || '127.0.0.1';
 
-// Start background judging queue
-startJudgingService();
-
-// Start HTTP server on loopback
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`Codest backend running on http://127.0.0.1:${PORT}`);
+async function start() {
+  if (!process.env.JWT_SECRET || /replace_with|your_.*secret/i.test(process.env.JWT_SECRET)) {
+    throw new Error('Set a unique JWT_SECRET in backend/.env (npm run setup creates it for fresh clones).');
+  }
+  getPythonCommand();
+  await prisma.$connect();
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`Codest backend running on http://${HOST}:${PORT}`);
+    startJudgingService();
+  });
+  server.on('error', error => {
+    console.error(`Server failed: ${error.message}`);
+    process.exit(1);
+  });
+  async function shutdown() {
+    stopJudgingService();
+    server.close();
+    await prisma.$disconnect();
+    process.exit(0);
+  }
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}
+start().catch(async error => {
+  console.error(`Startup failed: ${error.message}`);
+  console.error('Check backend/.env and run npm run db:setup with PostgreSQL running.');
+  await prisma.$disconnect();
+  process.exitCode = 1;
 });

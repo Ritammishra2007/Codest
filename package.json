@@ -1,24 +1,27 @@
 {
   "name": "codest-workspace",
-  "private": true,
-  "scripts": {
-    "db:start": "/Applications/Postgres.app/Contents/Versions/18/bin/pg_ctl -D backend/pgdata -o \"-p 5433 -k /tmp\" -l backend/pgdata/logfile start",
-    "db:stop": "/Applications/Postgres.app/Contents/Versions/18/bin/pg_ctl -D backend/pgdata stop",
-    "db:status": "/Applications/Postgres.app/Contents/Versions/18/bin/pg_isready -h 127.0.0.1 -p 5433",
-    "db:reset": "cd backend && node prisma/reset.js && node prisma/seed.js",
-    "db:seed": "cd backend && node prisma/seed.js",
-    "studio": "cd backend && npx prisma studio",
-    "backend": "cd backend && npm run dev",
-    "frontend": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
-    "test": "cd backend && node test/verify_codest.js"
-  },
   "version": "1.0.0",
-  "description": "> A 1v1 competitive programming platform for Python developers.",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
+  "private": true,
+  "description": "A local 1v1 Python programming platform.",
+  "engines": {
+    "node": ">=22"
   },
-  "keywords": [],
-  "type": "commonjs"
+  "scripts": {
+    "setup": "node scripts/project.mjs setup",
+    "install:all": "node scripts/project.mjs install",
+    "dev": "node scripts/project.mjs dev",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix backend test",
+    "test:runner": "npm --prefix backend run test:runner",
+    "doctor": "npm --prefix backend run doctor",
+    "db:start": "docker compose up -d --wait db",
+    "db:stop": "docker compose stop db",
+    "db:status": "docker compose ps db",
+    "db:setup": "npm --prefix backend run db:setup",
+    "db:seed": "npm --prefix backend run db:seed",
+    "db:reset": "npm --prefix backend run db:reset",
+    "studio": "npm --prefix backend run studio"
+  }
 }

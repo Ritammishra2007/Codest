@@ -1,8 +1,8 @@
-import 'dotenv/config';
+import '../config/env.js';
 import prisma from '../config/prisma.js';
 import { recoverInterruptedSubmissions } from '../services/judgingService.js';
 
-const BASE_URL = 'http://127.0.0.1:5001/api';
+const BASE_URL = process.env.TEST_API_URL || `http://127.0.0.1:${process.env.PORT || 5001}/api`;
 
 async function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -35,7 +35,7 @@ async function runTests() {
 
   // 2. Authentication: Register Player A & Player B
   console.log('\n2. Testing Authentication & Duplicate Detection...');
-  const testRunId = Date.now().toString().slice(-4);
+  const testRunId = Date.now().toString(36);
   const playerAUsername = `alice_${testRunId}`;
   const playerBUsername = `bob_${testRunId}`;
   const password = 'testpassword123';

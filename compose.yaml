@@ -1,0 +1,19 @@
+name: codest
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: codest
+      POSTGRES_PASSWORD: codest_local
+      POSTGRES_DB: codest_db
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - codest_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codest -d codest_db"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+volumes:
+  codest_db:
