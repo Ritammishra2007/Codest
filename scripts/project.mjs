@@ -30,6 +30,7 @@ async function main() {
   if (action === 'setup' || action === 'install') {
     if (action === 'setup') for (const folder of ['backend', 'frontend']) createEnvironment(folder);
     for (const folder of ['backend', 'frontend']) await run(['--prefix', folder, 'ci']);
+    await run(['--prefix', 'backend', 'run', 'generate']);
     if (action === 'setup') {
       await run(['--prefix', 'backend', 'run', 'doctor']);
       console.log('Next: npm run db:start (Docker), npm run db:setup, then npm run dev.');
@@ -42,6 +43,7 @@ async function main() {
       throw new Error('Run npm run setup first.');
     }
   }
+  await run(['--prefix', 'backend', 'run', 'generate']);
   const children = [];
   let stopping = false;
   function stop(code = 0) {

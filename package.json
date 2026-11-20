@@ -22,6 +22,8 @@
     "db:setup": "npm --prefix backend run db:setup",
     "db:seed": "npm --prefix backend run db:seed",
     "db:reset": "npm --prefix backend run db:reset",
-    "studio": "npm --prefix backend run studio"
+    "studio": "npm --prefix backend run studio",
+    "generate": "npm --prefix backend run generate",
+    "db:migrate": "npm --prefix backend run db:migrate"
   }
 }

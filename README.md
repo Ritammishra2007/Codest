@@ -24,9 +24,9 @@ npm run dev
 
 Open **http://localhost:5173**. The API listens at **http://127.0.0.1:5001/api**.
 
-`setup` installs the locked backend and frontend dependencies and creates their `.env` files. It generates a unique local JWT secret and preserves any existing `.env` files. `db:start` waits for PostgreSQL to become healthy; `db:setup` generates Prisma Client, creates the schema, and seeds four problems without deleting existing data. `dev` starts both services; Ctrl+C stops them. Database storage persists in a Docker volume.
+`setup` installs the locked backend and frontend dependencies creates their `.env` files, and explicitly generates Prisma Client (even when npm skips dependency install scripts). It generates a unique local JWT secret and preserves any existing `.env` files. `db:start` waits for PostgreSQL to become healthy; `db:setup` generates Prisma Client, applies the checked-in migrations, and seeds four problems without deleting existing data. `dev` starts both services; Ctrl+C stops them. Database storage persists in a Docker volume.
 
-After subsequent pulls, run `npm run install:all` if dependency files changed. Run `npm run db:setup` when the schema changes; Prisma will stop and ask for explicit handling if a change risks data loss.
+After subsequent pulls, run `npm run install:all` if dependency files changed. Run `npm run db:setup` after pulling new migrations. Developers creating schema changes should run `npx prisma migrate dev --name describe_change` from `backend/` against a development database and commit the resulting migration.
 
 ## Use your own PostgreSQL instead
 
@@ -63,7 +63,9 @@ Run these from the repository root:
 | `npm run doctor` | Check Python and required environment configuration |
 | `npm run db:start` / `npm run db:stop` | Start or stop the optional Docker database; retain data |
 | `npm run db:status` | Show the Docker database status |
-| `npm run db:setup` | Generate Prisma Client, apply schema, and seed missing problems |
+| `npm run generate` | Generate Prisma Client locally from the schema |
+| `npm run db:migrate` | Apply committed database migrations |
+| `npm run db:setup` | Generate Prisma Client, apply migrations, and seed missing problems |
 | `npm run db:seed` | Add missing seed problems |
 | `npm run db:reset` | **Delete all application data**, then reseed problems |
 | `npm run studio` | Open Prisma's database browser |
@@ -88,7 +90,7 @@ backend/
   config/         Environment, Prisma, and Python configuration
   controllers/    Authentication, room, and submission handlers
   middleware/     JWT authentication
-  prisma/         Schema, seed, and reset scripts
+  prisma/         Schema, committed migrations, seed, and reset scripts
   routes/         API routes
   services/       Python runner and judging queue
   test/           Runner and integration checks
@@ -104,3 +106,17 @@ compose.yaml      Optional local PostgreSQL
 Open two browser sessions, register two users, create a room in one session, and join with its code in the other. The problem appears when both players have joined. The first accepted solution wins.
 
 The Python runner executes submitted code as a local child process with time and output limits; it is **not a security sandbox**. Use this setup for local development with trusted users and code. A public deployment requires an isolated execution service.
+
+## Prisma Client and existing databases
+
+Prisma Client is generated for each laptop under `backend/node_modules/.prisma/client`. It is intentionally ignored by Git. `npm run setup` and `npm run install:all` now generate it explicitly. If you installed dependencies manually, run `npm run generate` from the repository root before starting the backend.
+
+Database migrations are source files and are committed under `backend/prisma/migrations/`.
+
+If you previously initialized this same schema with `prisma db push`, Prisma may report P3005 because the database contains tables but has no migration history. Do not reset a database containing data you need. Back it up and compare its schema with `backend/prisma/schema.prisma` first. Only if it matches the initial migration, mark that migration as already applied, from `backend/`:
+
+```sh
+npx prisma migrate resolve --applied 20261121000000_init
+```
+
+Then run `npm run db:setup` from the root. Fresh, empty databases do not need this baseline step.
